@@ -1,26 +1,25 @@
-import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'utils.dart';
+import 'package:login_page_hillfare/utils.dart';
 import 'main.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'forgot_password_page.dart';
 
-class SignUpWidget extends StatefulWidget {
-  final Function() onClickedSignIn;
-  const SignUpWidget({
+class SignIn extends StatefulWidget {
+  final VoidCallback onClickedSignUp;
+  const SignIn({
     Key? key,
-    required this.onClickedSignIn,
+    required this.onClickedSignUp,
   }) : super(key: key);
 
   @override
-  State<SignUpWidget> createState() => _SignUpWidgetState();
+  State<SignIn> createState() => _SignInState();
 }
 
-class _SignUpWidgetState extends State<SignUpWidget> {
-  final formKey = GlobalKey<FormState>();
+class _SignInState extends State<SignIn> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
   @override
   void dispose() {
     emailController.dispose();
@@ -51,7 +50,7 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                   child: FittedBox(
                     fit: BoxFit.contain,
                     child: Text(
-                      'SIGN UP',
+                      'SIGN IN',
                       style: TextStyle(
                           fontSize: 48,
                           fontWeight: FontWeight.w600,
@@ -88,13 +87,9 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                               ),
                               autovalidateMode:
                                   AutovalidateMode.onUserInteraction,
-                              validator: (email) => email != null &&
-                                      !EmailValidator.validate(email)
-                                  ? 'Enter a valid email'
-                                  : null,
                             ),
                           ),
-                          const SizedBox(height: 26),
+                          const SizedBox(height: 25),
                           SizedBox(
                             width: 260,
                             height: 35,
@@ -116,67 +111,70 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                               obscureText: true,
                               autovalidateMode:
                                   AutovalidateMode.onUserInteraction,
-                              validator: (value) =>
-                                  value != null && value.length < 8
-                                      ? 'Enter min. 8 characters'
-                                      : null,
-                            ),
-                          ),
-                          const SizedBox(height: 26),
-                          SizedBox(
-                            width: 260,
-                            height: 35,
-                            child: TextFormField(
-                              controller: confirmPasswordController,
-                              textInputAction: TextInputAction.done,
-                              decoration: InputDecoration(
-                                hintText: 'Re-enter Password',
-                                enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(25.0),
-                                    borderSide: const BorderSide(
-                                        width: 0, color: Colors.white)),
-                                contentPadding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
-                                filled: true,
-                                fillColor:
-                                    const Color.fromARGB(255, 255, 255, 255),
-                              ),
-                              obscureText: true,
-                              autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
-                              validator: ((value) {
-                                if (passwordController.text !=
-                                    confirmPasswordController.text) {
-                                  return "Password doesn't match";
-                                }
-                                return null;
-                              }),
                             ),
                           ),
                           const SizedBox(
-                            height: 41,
+                            height: 39,
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                                 maximumSize: const Size(260, 40),
                                 backgroundColor:
-                                    const Color.fromARGB(255, 66, 57, 140),
+                                    const Color.fromARGB(255, 184, 151, 213),
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(25))),
-                            onPressed: signUp,
+                            onPressed: signIn,
                             child: const Center(
                               child: SizedBox(
                                 child: FittedBox(
                                   fit: BoxFit.contain,
                                   child: Text(
-                                    'Sign Up',
+                                    'Sign In',
                                     style: TextStyle(
-                                        fontSize: 16, color: Colors.white),
+                                        fontSize: 16, color: Colors.black),
                                   ),
                                 ),
                               ),
                             ),
                           ),
+                          const SizedBox(
+                            height: 15,
+                          ),
+                          GestureDetector(
+                            onTap: (() =>
+                                Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ForgotPasswordPage(),
+                                ))),
+                            child: const Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                  decoration: TextDecoration.underline,
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 110,
+                          ),
+                          RichText(
+                              text: TextSpan(
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700),
+                                  text: 'Don’t have an account? ',
+                                  children: [
+                                TextSpan(
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = widget.onClickedSignUp,
+                                    text: 'Sign Up',
+                                    style: const TextStyle(
+                                        decoration: TextDecoration.underline,
+                                        color: Colors.white,
+                                        fontSize: 14))
+                              ]))
                         ]),
                   ),
                 ),
@@ -186,9 +184,7 @@ class _SignUpWidgetState extends State<SignUpWidget> {
         ));
   }
 
-  Future signUp() async {
-    final isValid = formKey.currentState!.validate();
-    if (!isValid) return;
+  Future signIn() async {
     showDialog(
         context: context,
         barrierDismissible: false,
@@ -196,7 +192,7 @@ class _SignUpWidgetState extends State<SignUpWidget> {
               child: CircularProgressIndicator(),
             )));
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
@@ -205,6 +201,7 @@ class _SignUpWidgetState extends State<SignUpWidget> {
 
       Utils.showSnackBar(e.message);
     }
+
     navigatorKey.currentState!.popUntil((route) => route.isFirst);
   }
 }
